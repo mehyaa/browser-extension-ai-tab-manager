@@ -1,9 +1,9 @@
-// Tab Manager - Popup Script
+// Tab Manager - Extension Page Script
 
 let allTabs = [];
 let selectedTabs = new Set();
 
-// Initialize popup
+// Initialize extension page
 document.addEventListener('DOMContentLoaded', async () => {
     await loadTabs();
     setupEventListeners();
@@ -397,7 +397,6 @@ async function editTabTags(tab) {
         const tabTags = storage.tabTags || {};
         tabTags[tab.id] = tags;
         await chrome.storage.local.set({ tabTags });
-
         renderTabs(allTabs);
     }
 }

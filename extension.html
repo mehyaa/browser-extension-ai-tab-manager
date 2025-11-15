@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Tab Manager</title>
-    <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="extension.css">
+    <link rel="icon" href="icons/icon48.png">
+    <meta name="color-scheme" content="light dark">
+    <meta name="application-name" content="AI Tab Manager">
 </head>
 <body>
     <div class="container">
@@ -12,10 +15,10 @@
             <h1>AI Tab Manager</h1>
             <div class="header-actions">
                 <button id="refreshBtn" class="btn btn-small" title="Refresh tabs">🔄</button>
-                <button id="settingsBtn" class="btn btn-small" title="Settings">⚙️</button>
+                <button id="settingsBtn" class="btn btn-small" title="Open options">⚙️</button>
             </div>
         </header>
-        
+
         <div class="controls">
             <div class="control-group">
                 <button id="analyzeBtn" class="btn btn-primary">🤖 Analyze & Suggest Groups</button>
@@ -34,6 +37,9 @@
         <div class="stats">
             <span id="tabCount">0 tabs</span>
             <span id="windowCount">0 windows</span>
+            <span style="margin-left:auto;">
+                <a href="#" id="openOptionsLink" title="Open options page" style="font-size:12px;">Open Options</a>
+            </span>
         </div>
 
         <div id="loadingIndicator" class="loading hidden">
@@ -64,6 +70,19 @@
             <button id="closeSelectedBtn" class="btn btn-danger" disabled>Close Selected</button>
         </div>
     </div>
-    <script src="popup.js"></script>
+    <script src="extension.js"></script>
+    <script>
+    // Provide a visible anchor link to options as requested
+    document.addEventListener('DOMContentLoaded', () => {
+        const link = document.getElementById('openOptionsLink');
+        if (link) {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                chrome.runtime.openOptionsPage();
+            });
+        }
+    });
+    </script>
+
 </body>
 </html>

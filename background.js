@@ -1,5 +1,15 @@
 // Background Service Worker for AI Tab Manager
 
+// Open the extension page in a new tab when the toolbar icon is clicked
+chrome.action.onClicked.addListener(async () => {
+    const url = chrome.runtime.getURL('extension.html');
+    try {
+        await chrome.tabs.create({ url });
+    } catch (e) {
+        console.error('Failed to open extension page:', e);
+    }
+});
+
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'analyzeTabsWithAI') {
