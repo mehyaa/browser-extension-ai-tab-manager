@@ -29,25 +29,27 @@ async function analyzeTabsWithAI(tabs, settings) {
         const tabsWithContent = await extractTabsContent(tabs);
 
         // Prepare prompt for AI
+        const systemPrompt = "You are a helpful assistant that analyzes browser tabs and suggests organization tags.";
+
         const prompt = createAnalysisPrompt(tabsWithContent);
 
         let result;
 
         switch (llmProvider) {
             case 'openai':
-                result = await analyzeWithOpenAI(prompt, llmOptions.apiKey, llmOptions.model || 'gpt-3.5-turbo');
+                result = await analyzeWithOpenAI(systemPrompt, prompt, llmOptions.apiKey, llmOptions.model || 'gpt-3.5-turbo');
                 break;
             case 'ollama':
-                result = await analyzeWithOllama(prompt, llmOptions.apiEndpoint || 'http://localhost:11434', llmOptions.model || 'llama2');
+                result = await analyzeWithOllama(systemPrompt, prompt, llmOptions.apiEndpoint || 'http://localhost:11434', llmOptions.model || 'llama2');
                 break;
             case 'gemini':
-                result = await analyzeWithGemini(prompt, llmOptions.apiKey, llmOptions.model || 'gemini-1.5-pro-latest');
+                result = await analyzeWithGemini(systemPrompt, prompt, llmOptions.apiKey, llmOptions.model || 'gemini-1.5-pro-latest');
                 break;
             case 'claude':
-                result = await analyzeWithClaude(prompt, llmOptions.apiKey, llmOptions.model || 'claude-3-5-sonnet-20241022');
+                result = await analyzeWithClaude(systemPrompt, prompt, llmOptions.apiKey, llmOptions.model || 'claude-3-5-sonnet-20241022');
                 break;
             case 'custom':
-                result = await analyzeWithCustomAPI(prompt, llmOptions.apiEndpoint, llmOptions.apiKey, llmOptions.model);
+                result = await analyzeWithCustomAPI(systemPrompt, prompt, llmOptions.apiEndpoint, llmOptions.apiKey, llmOptions.model);
                 break;
             default:
                 throw new Error('Unsupported LLM provider');
@@ -138,12 +140,12 @@ function createAnalysisPrompt(tabsWithContent) {
         return tabInfo;
     }).join('\n\n');
 
-    return `You are a browser tab organization assistant. Analyze the following browser tabs based on their titles and content, and suggest appropriate groups/tags for each tab. Consider the content type, topic, and purpose.
+    return `You are a browser tab organization assistant. Analyze the following browser tabs based on their titles and content, and suggest appropriate tags for each tab. Consider the content type, topic, and purpose.
 
 Tabs to analyze:
 ${tabList}
 
-For each tab, suggest 1-3 relevant tags/groups that would help organize them. Tags should be concise (1-2 words) and descriptive. Base your suggestions on the actual content, not just the URL.
+For each tab, suggest 1-3 relevant tags that would help organize them. Tags should be concise (1-2 words) and descriptive. Base your suggestions on the actual content, not just the URL.
 
 Respond in JSON format:
 {
@@ -163,7 +165,7 @@ Only respond with the JSON, no additional text.`;
 }
 
 // Analyze with OpenAI API
-async function analyzeWithOpenAI(prompt, apiKey, model) {
+async function analyzeWithOpenAI(systemPrompt, userPrompt, apiKey, model) {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -175,11 +177,11 @@ async function analyzeWithOpenAI(prompt, apiKey, model) {
             messages: [
                 {
                     role: 'system',
-                    content: 'You are a helpful assistant that analyzes browser tabs and suggests organization tags.'
+                    content: systemPrompt
                 },
                 {
                     role: 'user',
-                    content: prompt
+                    content: userPrompt
                 }
             ],
             temperature: 0.7,
@@ -228,7 +230,7 @@ async function analyzeWithOpenAI(prompt, apiKey, model) {
 }
 
 // Analyze with Google Gemini API
-async function analyzeWithGemini(prompt, apiKey, model) {
+async function analyzeWithGemini(systemPrompt, userPrompt, apiKey, model) {
     if (!apiKey) {
         throw new Error('Gemini API key is required');
     }
@@ -243,8 +245,8 @@ async function analyzeWithGemini(prompt, apiKey, model) {
                 {
                     role: 'user',
                     parts: [
-                        { text: 'You are a helpful assistant that analyzes browser tabs and suggests organization tags.' },
-                        { text: prompt }
+                        { text: systemPrompt },
+                        { text: userPrompt }
                     ]
                 }
             ],
@@ -275,7 +277,7 @@ async function analyzeWithGemini(prompt, apiKey, model) {
 }
 
 // Analyze with Anthropic Claude API
-async function analyzeWithClaude(prompt, apiKey, model) {
+async function analyzeWithClaude(systemPrompt, userPrompt, apiKey, model) {
     if (!apiKey) {
         throw new Error('Claude API key is required');
     }
@@ -290,9 +292,9 @@ async function analyzeWithClaude(prompt, apiKey, model) {
             model: model,
             max_tokens: 2000,
             temperature: 0.7,
-            system: 'You are a helpful assistant that analyzes browser tabs and suggests organization tags.',
+            system: systemPrompt,
             messages: [
-                { role: 'user', content: prompt }
+                { role: 'user', content: userPrompt }
             ]
         })
     });
@@ -317,7 +319,7 @@ async function analyzeWithClaude(prompt, apiKey, model) {
 }
 
 // Analyze with Ollama API
-async function analyzeWithOllama(prompt, endpoint, model) {
+async function analyzeWithOllama(systemPrompt, userPrompt, endpoint, model) {
     const response = await fetch(`${endpoint}/api/generate`, {
         method: 'POST',
         headers: {
@@ -325,7 +327,8 @@ async function analyzeWithOllama(prompt, endpoint, model) {
         },
         body: JSON.stringify({
             model: model,
-            prompt: prompt,
+            prompt: userPrompt,
+            system: systemPrompt,
             stream: false
         })
     });
@@ -350,7 +353,7 @@ async function analyzeWithOllama(prompt, endpoint, model) {
 }
 
 // Analyze with Custom API
-async function analyzeWithCustomAPI(prompt, endpoint, apiKey, model) {
+async function analyzeWithCustomAPI(systemPrompt, userPrompt, endpoint, apiKey, model) {
     const headers = {
         'Content-Type': 'application/json'
     };
@@ -360,7 +363,7 @@ async function analyzeWithCustomAPI(prompt, endpoint, apiKey, model) {
     }
 
     const body = {
-        prompt: prompt
+        prompt: userPrompt
     };
 
     if (model) {
