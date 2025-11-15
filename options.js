@@ -391,6 +391,11 @@ async function fetchOllamaModels() {
     });
 
     if (!response.ok) {
+        if (response.status === 403) {
+            throw new Error(
+                'Ollama returned 403 (Forbidden). Recent Ollama versions block browser origins by default. Allow your extension origin by starting Ollama with CORS enabled, e.g. in PowerShell:\n\n    $env:OLLAMA_ORIGINS="*"; ollama serve\n\nThen retry fetching models.'
+            );
+        }
         throw new Error(`Failed to connect to Ollama (${response.status}). Make sure Ollama is running.`);
     }
 

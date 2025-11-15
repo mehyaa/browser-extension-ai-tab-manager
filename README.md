@@ -162,6 +162,26 @@ Click the "Test Connection" button to verify your LLM provider is configured cor
 3. For Ollama, ensure it's running: `ollama serve`
 4. Check browser console for error messages
 
+### Ollama returns 403 (Forbidden)
+
+- Reason: Recent Ollama versions block requests from browser origins (including Chrome/Firefox extensions) by default for security. When the extension calls `http://localhost:11434`, Ollama may respond with 403.
+- Fix (Windows PowerShell):
+
+```
+$env:OLLAMA_ORIGINS="*"; ollama serve
+```
+
+- Persistent setup (optional):
+
+```
+setx OLLAMA_ORIGINS "*"
+# If running as a Windows service, restart it (service name may be Ollama):
+Stop-Service -Name Ollama
+Start-Service -Name Ollama
+```
+
+- Tip: You can replace `*` with a stricter allowlist if supported by your Ollama version.
+
 ### Tabs Not Grouping
 
 - Make sure tabs have tags assigned (either from AI or manually)

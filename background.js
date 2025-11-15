@@ -327,6 +327,11 @@ async function analyzeWithOllama(prompt, endpoint, model) {
         } catch (e) {
             errorText = '[Unable to read response body]';
         }
+        if (response.status === 403) {
+            throw new Error(
+                `Ollama API request failed (403 Forbidden). This usually happens because Ollama blocks browser origins by default. Start Ollama allowing browser origins, e.g. in PowerShell: $env:OLLAMA_ORIGINS="*"; ollama serve. Original response: ${errorText}`
+            );
+        }
         throw new Error(`Ollama API request failed (status ${response.status}): ${errorText}`);
     }
 

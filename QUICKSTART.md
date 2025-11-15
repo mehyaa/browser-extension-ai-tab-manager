@@ -42,6 +42,16 @@
 8. Click "Save Settings"
 9. Click "Test Connection" to verify
 
+Note on 403 errors from Ollama:
+
+If the test fails with 403 (Forbidden), Ollama is likely blocking browser/extension origins. Start Ollama with CORS enabled:
+
+```
+$env:OLLAMA_ORIGINS="*"; ollama serve
+```
+
+Then try again.
+
 ### Option 3: Custom API
 
 If you have your own LLM API endpoint:
