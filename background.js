@@ -13,7 +13,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Analyze tabs using AI
 async function analyzeTabsWithAI(tabs, settings) {
     try {
-        const { llmProvider, apiKey, apiEndpoint, model } = settings;
+        const { llmProvider, llmOptions } = settings;
 
         // Extract content from tabs
         const tabsWithContent = await extractTabsContent(tabs);
@@ -25,19 +25,19 @@ async function analyzeTabsWithAI(tabs, settings) {
 
         switch (llmProvider) {
             case 'openai':
-                result = await analyzeWithOpenAI(prompt, apiKey, model || 'gpt-3.5-turbo');
+                result = await analyzeWithOpenAI(prompt, llmOptions.apiKey, llmOptions.model || 'gpt-3.5-turbo');
                 break;
             case 'ollama':
-                result = await analyzeWithOllama(prompt, apiEndpoint || 'http://localhost:11434', model || 'llama2');
+                result = await analyzeWithOllama(prompt, llmOptions.apiEndpoint || 'http://localhost:11434', llmOptions.model || 'llama2');
                 break;
             case 'gemini':
-                result = await analyzeWithGemini(prompt, apiKey, model || 'gemini-1.5-pro-latest');
+                result = await analyzeWithGemini(prompt, llmOptions.apiKey, llmOptions.model || 'gemini-1.5-pro-latest');
                 break;
             case 'claude':
-                result = await analyzeWithClaude(prompt, apiKey, model || 'claude-3-5-sonnet-20241022');
+                result = await analyzeWithClaude(prompt, llmOptions.apiKey, llmOptions.model || 'claude-3-5-sonnet-20241022');
                 break;
             case 'custom':
-                result = await analyzeWithCustomAPI(prompt, apiEndpoint, apiKey, model);
+                result = await analyzeWithCustomAPI(prompt, llmOptions.apiEndpoint, llmOptions.apiKey, llmOptions.model);
                 break;
             default:
                 throw new Error('Unsupported LLM provider');
@@ -439,7 +439,9 @@ chrome.runtime.onInstalled.addListener((details) => {
         // Set default settings
         chrome.storage.local.set({
             llmProvider: 'openai',
-            model: 'gpt-3.5-turbo'
+            llmOptions: {
+                model: 'gpt-3.5-turbo'
+            }
         });
     }
 });

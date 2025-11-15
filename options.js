@@ -22,62 +22,63 @@ async function loadSettings() {
     try {
         const settings = await chrome.storage.local.get([
             'llmProvider',
-            'apiKey',
-            'apiEndpoint',
-            'model'
+            'llmOptions'
         ]);
 
         if (settings.llmProvider) {
             document.getElementById('llmProvider').value = settings.llmProvider;
-            showProviderSettings(settings.llmProvider);
+
+            const llmOptions = settings.llmOptions ?? {};
+
+            showProviderSettings(settings.llmProvider, llmOptions);
 
             // Load provider-specific settings
             switch (settings.llmProvider) {
                 case 'openai':
-                    if (settings.apiKey) {
-                        document.getElementById('openaiApiKey').value = settings.apiKey;
+                    if (llmOptions.apiKey) {
+                        document.getElementById('openaiApiKey').value = llmOptions.apiKey;
                     }
-                    if (settings.model) {
-                        document.getElementById('openaiModel').value = settings.model;
+                    if (llmOptions.model) {
+                        document.getElementById('openaiModel').value = llmOptions.model;
                     }
                     break;
 
                 case 'ollama':
-                    if (settings.apiEndpoint) {
-                        document.getElementById('ollamaEndpoint').value = settings.apiEndpoint;
+                    if (llmOptions.apiEndpoint) {
+                        document.getElementById('ollamaEndpoint').value = llmOptions.apiEndpoint;
                     }
-                    if (settings.model) {
-                        document.getElementById('ollamaModel').value = settings.model;
+                    if (llmOptions.model) {
+                        document.getElementById('ollamaModel').value = llmOptions.model;
                     }
                     break;
 
                 case 'gemini':
-                    if (settings.apiKey) {
-                        document.getElementById('geminiApiKey').value = settings.apiKey;
+                    if (llmOptions.apiKey) {
+                        document.getElementById('geminiApiKey').value = llmOptions.apiKey;
                     }
-                    if (settings.model) {
-                        document.getElementById('geminiModel').value = settings.model;
+                    if (llmOptions.model) {
+                        document.getElementById('geminiModel').value = llmOptions.model;
                     }
                     break;
 
                 case 'claude':
-                    if (settings.apiKey) {
-                        document.getElementById('claudeApiKey').value = settings.apiKey;
+                    if (llmOptions.apiKey) {
+                        document.getElementById('claudeApiKey').value = llmOptions.apiKey;
                     }
-                    if (settings.model) {
-                        document.getElementById('claudeModel').value = settings.model;
+                    if (llmOptions.model) {
+                        document.getElementById('claudeModel').value = llmOptions.model;
                     }
                     break;
 
                 case 'custom':
-                    if (settings.apiEndpoint) {
-                        document.getElementById('customEndpoint').value = settings.apiEndpoint;
+                    if (llmOptions.apiEndpoint) {
+                        document.getElementById('customEndpoint').value = llmOptions.apiEndpoint;
                     }
-                    if (settings.apiKey) {
-                        document.getElementById('customApiKey').value = settings.apiKey;
+                    if (llmOptions.apiKey) {
+                        document.getElementById('customApiKey').value = llmOptions.apiKey;
                     }
-                    if (settings.model) {
-                        document.getElementById('customModel').value = settings.model;
+                    if (llmOptions.model) {
+                        document.getElementById('customModel').value = llmOptions.model;
                     }
                     break;
             }
@@ -94,23 +95,13 @@ function onProviderChange(event) {
 }
 
 // Show provider-specific settings
-function showProviderSettings(provider) {
-    // Hide all provider settings
-    document.querySelectorAll('.provider-settings').forEach(el => {
-        el.classList.add('hidden');
-    });
+function showProviderSettings(provider, options) {
+    document.querySelectorAll('.provider-settings').forEach(el => el.classList.add('hidden'));
 
-    // Show selected provider settings
-    if (provider === 'openai') {
-        document.getElementById('openaiSettings').classList.remove('hidden');
-    } else if (provider === 'ollama') {
-        document.getElementById('ollamaSettings').classList.remove('hidden');
-    } else if (provider === 'gemini') {
-        document.getElementById('geminiSettings').classList.remove('hidden');
-    } else if (provider === 'claude') {
-        document.getElementById('claudeSettings').classList.remove('hidden');
-    } else if (provider === 'custom') {
-        document.getElementById('customSettings').classList.remove('hidden');
+    document.getElementById(`${provider}Settings`).classList.remove('hidden');
+
+    if (options) {
+        populateModelDropdown(provider, options.availableModels || []);
     }
 }
 
@@ -125,61 +116,82 @@ async function saveSettings() {
         }
 
         let settings = {
-            llmProvider: provider
+            llmProvider: provider,
+            llmOptions: {}
         };
 
         // Get provider-specific settings
         switch (provider) {
             case 'openai':
                 const openaiApiKey = document.getElementById('openaiApiKey').value.trim();
+
                 if (!openaiApiKey) {
                     showStatus('Please enter your OpenAI API key', 'error');
                     return;
                 }
-                settings.apiKey = openaiApiKey;
-                settings.model = document.getElementById('openaiModel').value;
+
+                settings.llmOptions.apiKey = openaiApiKey;
+                settings.llmOptions.model = document.getElementById('openaiModel').value;
+                settings.llmOptions.availableModels = await fetchOpenAIModels();
+
                 break;
 
             case 'ollama':
                 const ollamaEndpoint = document.getElementById('ollamaEndpoint').value.trim() || 'http://localhost:11434';
                 const ollamaModel = document.getElementById('ollamaModel').value.trim();
+
                 if (!ollamaModel) {
                     showStatus('Please select an Ollama model', 'error');
                     return;
                 }
-                settings.apiEndpoint = ollamaEndpoint;
-                settings.model = ollamaModel;
+
+                settings.llmOptions.apiEndpoint = ollamaEndpoint;
+                settings.llmOptions.model = ollamaModel;
+
+                settings.llmOptions.availableModels = await fetchOllamaModels();
+
                 break;
 
             case 'gemini':
                 const geminiApiKey = document.getElementById('geminiApiKey').value.trim();
+
                 if (!geminiApiKey) {
                     showStatus('Please enter your Gemini API key', 'error');
                     return;
                 }
-                settings.apiKey = geminiApiKey;
-                settings.model = document.getElementById('geminiModel').value;
+
+                settings.llmOptions.apiKey = geminiApiKey;
+                settings.llmOptions.model = document.getElementById('geminiModel').value;
+                settings.llmOptions.availableModels = await fetchGeminiModels();
+
                 break;
 
             case 'claude':
                 const claudeApiKey = document.getElementById('claudeApiKey').value.trim();
+
                 if (!claudeApiKey) {
                     showStatus('Please enter your Claude API key', 'error');
                     return;
                 }
-                settings.apiKey = claudeApiKey;
-                settings.model = document.getElementById('claudeModel').value;
+
+                settings.llmOptions.apiKey = claudeApiKey;
+                settings.llmOptions.model = document.getElementById('claudeModel').value;
+                settings.llmOptions.availableModels = await fetchClaudeModels();
+
                 break;
 
             case 'custom':
                 const customEndpoint = document.getElementById('customEndpoint').value.trim();
+
                 if (!customEndpoint) {
                     showStatus('Please enter the API endpoint', 'error');
                     return;
                 }
-                settings.apiEndpoint = customEndpoint;
-                settings.apiKey = document.getElementById('customApiKey').value.trim();
-                settings.model = document.getElementById('customModel').value.trim();
+
+                settings.llmOptions.apiEndpoint = customEndpoint;
+                settings.llmOptions.apiKey = document.getElementById('customApiKey').value.trim();
+                settings.llmOptions.model = document.getElementById('customModel').value.trim();
+
                 break;
         }
 
@@ -205,9 +217,7 @@ async function testConnection() {
 
         const settings = await chrome.storage.local.get([
             'llmProvider',
-            'apiKey',
-            'apiEndpoint',
-            'model'
+            'llmOptions'
         ]);
 
         // Create a simple test prompt
