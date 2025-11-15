@@ -15,6 +15,22 @@ function setupEventListeners() {
     document.getElementById('refreshOllamaModels').addEventListener('click', () => fetchModels('ollama'));
     document.getElementById('refreshGeminiModels').addEventListener('click', () => fetchModels('gemini'));
     document.getElementById('refreshClaudeModels').addEventListener('click', () => fetchModels('claude'));
+
+    // Theme selection
+    const themeSelect = document.getElementById('themeSelect');
+    if (themeSelect) {
+        themeSelect.addEventListener('change', async (e) => {
+            const value = e.target.value;
+            await chrome.storage.local.set({ theme: value });
+            // Reinitialize to ensure system listener is attached when needed
+            if (window.Theme && typeof window.Theme.applyTheme === 'function') {
+                window.Theme.applyTheme(value);
+                if (typeof window.Theme.initTheme === 'function' && value === 'system') {
+                    window.Theme.initTheme();
+                }
+            }
+        });
+    }
 }
 
 // Load saved settings
@@ -22,8 +38,16 @@ async function loadSettings() {
     try {
         const settings = await chrome.storage.local.get([
             'llmProvider',
-            'llmOptions'
+            'llmOptions',
+            'theme'
         ]);
+
+        // Theme
+        const theme = settings.theme || 'system';
+        const themeSelect = document.getElementById('themeSelect');
+        if (themeSelect) {
+            themeSelect.value = theme;
+        }
 
         if (settings.llmProvider) {
             document.getElementById('llmProvider').value = settings.llmProvider;
@@ -115,6 +139,8 @@ async function saveSettings() {
             return;
         }
 
+        const theme = (document.getElementById('themeSelect')?.value) || 'system';
+
         let settings = {
             llmProvider: provider,
             llmOptions: {}
@@ -195,7 +221,13 @@ async function saveSettings() {
                 break;
         }
 
-        await chrome.storage.local.set(settings);
+        await chrome.storage.local.set({ ...settings, theme });
+        if (window.Theme && typeof window.Theme.applyTheme === 'function') {
+            window.Theme.applyTheme(theme);
+            if (typeof window.Theme.initTheme === 'function' && theme === 'system') {
+                window.Theme.initTheme();
+            }
+        }
         showStatus('Settings saved successfully!', 'success');
     } catch (error) {
         console.error('Error saving settings:', error);

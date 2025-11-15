@@ -456,7 +456,8 @@ chrome.runtime.onInstalled.addListener((details) => {
             llmProvider: 'openai',
             llmOptions: {
                 model: 'gpt-3.5-turbo'
-            }
+            },
+            theme: 'system'
         });
     }
 });

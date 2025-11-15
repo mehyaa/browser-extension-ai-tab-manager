@@ -31,6 +31,7 @@ A powerful browser extension for Chrome and Firefox that uses AI to help you org
 - Quick tab switching
 - Manual tag editing
 - Real-time tab statistics
+- Dark mode with system/light/dark theme options
 
 ## Installation
 
@@ -106,6 +107,18 @@ Notes:
 ### 2. Test Your Configuration
 
 Click the "Test Connection" button to verify your LLM provider is configured correctly.
+
+### 3. Appearance (Theme)
+
+You can control the extension's theme:
+
+- Open Options from the extension header or the link in the extension UI
+- In the Appearance section, choose one of:
+  - System: Follow your OS/browser preference automatically
+  - Light: Force light theme
+  - Dark: Force dark theme
+
+The UI updates immediately and persists across sessions.
 
 ## Usage
 

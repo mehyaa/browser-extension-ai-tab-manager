@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Tab Manager - Settings</title>
     <link rel="stylesheet" href="options.css">
+    <meta name="color-scheme" content="light dark">
 </head>
 <body>
     <div class="container">
@@ -13,6 +14,18 @@
         </header>
 
         <div class="content">
+            <section class="settings-section">
+                <h2>Appearance</h2>
+                <div class="form-group">
+                    <label for="themeSelect">Theme:</label>
+                    <select id="themeSelect" class="form-control">
+                        <option value="system">System</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                    <small class="help-text">Choose Light, Dark, or follow your system preference.</small>
+                </div>
+            </section>
             <section class="settings-section">
                 <h2>LLM Provider Configuration</h2>
                 <p class="description">Configure your AI provider to enable intelligent tab grouping and suggestions.</p>
@@ -143,6 +156,7 @@
             <span id="statusMessage" class="status-message"></span>
         </footer>
     </div>
+    <script src="theme.js"></script>
     <script src="options.js"></script>
 </body>
 </html>
