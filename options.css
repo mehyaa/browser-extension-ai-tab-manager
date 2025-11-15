@@ -180,3 +180,63 @@ footer {
 .status-message.error {
     color: #f56565;
 }
+
+/* Model selector group styles */
+.model-selector-group {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.model-select {
+    flex: 1;
+}
+
+.btn-refresh {
+    padding: 10px 14px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+}
+
+.btn-refresh:hover {
+    background: #5568d3;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.btn-refresh:active {
+    transform: translateY(0);
+}
+
+.btn-refresh:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-refresh.loading .refresh-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.refresh-icon {
+    display: inline-block;
+    line-height: 1;
+}

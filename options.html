@@ -38,11 +38,17 @@
 
                     <div class="form-group">
                         <label for="openaiModel">Model:</label>
-                        <select id="openaiModel" class="form-control">
-                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Recommended)</option>
-                            <option value="gpt-4">GPT-4</option>
-                            <option value="gpt-4-turbo-preview">GPT-4 Turbo</option>
-                        </select>
+                        <div class="model-selector-group">
+                            <select id="openaiModel" class="form-control model-select">
+                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Recommended)</option>
+                                <option value="gpt-4">GPT-4</option>
+                                <option value="gpt-4-turbo-preview">GPT-4 Turbo</option>
+                            </select>
+                            <button type="button" id="refreshOpenaiModels" class="btn-refresh" title="Fetch available models">
+                                <span class="refresh-icon">🔄</span>
+                            </button>
+                        </div>
+                        <small class="help-text" id="openaiModelStatus"></small>
                     </div>
                 </div>
 
@@ -55,8 +61,15 @@
 
                     <div class="form-group">
                         <label for="ollamaModel">Model:</label>
-                        <input type="text" id="ollamaModel" class="form-control" placeholder="llama2">
-                        <small class="help-text">Enter the model name you have pulled (e.g., llama2, mistral, codellama)</small>
+                        <div class="model-selector-group">
+                            <select id="ollamaModel" class="form-control model-select">
+                                <option value="">-- Select Model --</option>
+                            </select>
+                            <button type="button" id="refreshOllamaModels" class="btn-refresh" title="Fetch available models">
+                                <span class="refresh-icon">🔄</span>
+                            </button>
+                        </div>
+                        <small class="help-text" id="ollamaModelStatus">Click refresh to load available models</small>
                     </div>
                 </div>
 
@@ -69,10 +82,16 @@
 
                     <div class="form-group">
                         <label for="geminiModel">Model:</label>
-                        <select id="geminiModel" class="form-control">
-                            <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (Recommended)</option>
-                            <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Faster/Cheaper)</option>
-                        </select>
+                        <div class="model-selector-group">
+                            <select id="geminiModel" class="form-control model-select">
+                                <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (Recommended)</option>
+                                <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Faster/Cheaper)</option>
+                            </select>
+                            <button type="button" id="refreshGeminiModels" class="btn-refresh" title="Fetch available models">
+                                <span class="refresh-icon">🔄</span>
+                            </button>
+                        </div>
+                        <small class="help-text" id="geminiModelStatus"></small>
                     </div>
                 </div>
 
@@ -85,11 +104,17 @@
 
                     <div class="form-group">
                         <label for="claudeModel">Model:</label>
-                        <select id="claudeModel" class="form-control">
-                            <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (Recommended)</option>
-                            <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku (Faster/Cheaper)</option>
-                            <option value="claude-3-opus-20240229">Claude 3 Opus</option>
-                        </select>
+                        <div class="model-selector-group">
+                            <select id="claudeModel" class="form-control model-select">
+                                <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (Recommended)</option>
+                                <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku (Faster/Cheaper)</option>
+                                <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+                            </select>
+                            <button type="button" id="refreshClaudeModels" class="btn-refresh" title="Fetch available models">
+                                <span class="refresh-icon">🔄</span>
+                            </button>
+                        </div>
+                        <small class="help-text" id="claudeModelStatus"></small>
                     </div>
                 </div>
 
