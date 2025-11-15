@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tab Manager - Settings</title>
+    <link rel="stylesheet" href="options.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Tab Manager Settings</h1>
+        </header>
+        
+        <div class="content">
+            <section class="settings-section">
+                <h2>LLM Provider Configuration</h2>
+                <p class="description">Configure your AI provider to enable intelligent tab grouping and suggestions.</p>
+                
+                <div class="form-group">
+                    <label for="llmProvider">LLM Provider:</label>
+                    <select id="llmProvider" class="form-control">
+                        <option value="">-- Select Provider --</option>
+                        <option value="openai">OpenAI (GPT-3.5, GPT-4)</option>
+                        <option value="ollama">Ollama (Local)</option>
+                        <option value="custom">Custom API Endpoint</option>
+                    </select>
+                </div>
+                
+                <div id="openaiSettings" class="provider-settings hidden">
+                    <div class="form-group">
+                        <label for="openaiApiKey">OpenAI API Key:</label>
+                        <input type="password" id="openaiApiKey" class="form-control" placeholder="sk-...">
+                        <small class="help-text">Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a></small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="openaiModel">Model:</label>
+                        <select id="openaiModel" class="form-control">
+                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Recommended)</option>
+                            <option value="gpt-4">GPT-4</option>
+                            <option value="gpt-4-turbo-preview">GPT-4 Turbo</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="ollamaSettings" class="provider-settings hidden">
+                    <div class="form-group">
+                        <label for="ollamaEndpoint">Ollama Endpoint:</label>
+                        <input type="text" id="ollamaEndpoint" class="form-control" placeholder="http://localhost:11434">
+                        <small class="help-text">Default: http://localhost:11434 - Make sure Ollama is running locally</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ollamaModel">Model:</label>
+                        <input type="text" id="ollamaModel" class="form-control" placeholder="llama2">
+                        <small class="help-text">Enter the model name you have pulled (e.g., llama2, mistral, codellama)</small>
+                    </div>
+                </div>
+                
+                <div id="customSettings" class="provider-settings hidden">
+                    <div class="form-group">
+                        <label for="customEndpoint">API Endpoint:</label>
+                        <input type="text" id="customEndpoint" class="form-control" placeholder="https://api.example.com/generate">
+                        <small class="help-text">Full URL to your custom API endpoint</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="customApiKey">API Key (optional):</label>
+                        <input type="password" id="customApiKey" class="form-control" placeholder="Your API key">
+                        <small class="help-text">Leave empty if your API doesn't require authentication</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="customModel">Model (optional):</label>
+                        <input type="text" id="customModel" class="form-control" placeholder="model-name">
+                        <small class="help-text">Model identifier, if required by your API</small>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="settings-section">
+                <h2>About</h2>
+                <p>AI Tab Manager helps you organize your browser tabs using artificial intelligence.</p>
+                <p><strong>Features:</strong></p>
+                <ul>
+                    <li>View all tabs across windows in a single table</li>
+                    <li>AI-powered tag and group suggestions</li>
+                    <li>Organize tabs by tags/groups into separate windows</li>
+                    <li>Search and filter tabs</li>
+                    <li>Bulk operations on multiple tabs</li>
+                </ul>
+                <p class="version">Version 1.0.0</p>
+            </section>
+        </div>
+        
+        <footer>
+            <button id="saveBtn" class="btn btn-primary">Save Settings</button>
+            <button id="testBtn" class="btn btn-secondary">Test Connection</button>
+            <span id="statusMessage" class="status-message"></span>
+        </footer>
+    </div>
+    <script src="options.js"></script>
+</body>
+</html>
