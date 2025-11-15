@@ -1,0 +1,1 @@
+# browser-extension-ai-tab-manager
