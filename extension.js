@@ -163,20 +163,26 @@ function createTabRow(tab) {
     // Tags
     const tagsCell = document.createElement('td');
     tagsCell.className = 'tab-tags';
+
+    const tagsContainer = document.createElement('div');
+
     if (tab.tags && tab.tags.length > 0) {
         tab.tags.forEach(tag => {
             const tagSpan = document.createElement('span');
             tagSpan.className = tag.suggested ? 'tag suggested' : 'tag';
             tagSpan.textContent = tag.name;
             tagSpan.title = tag.suggested ? 'AI suggested' : '';
-            tagsCell.appendChild(tagSpan);
+            tagsContainer.appendChild(tagSpan);
         });
     } else {
         const noTagsSpan = document.createElement('span');
         noTagsSpan.className = 'no-tags';
         noTagsSpan.textContent = 'No tags';
-        tagsCell.appendChild(noTagsSpan);
+        tagsContainer.appendChild(noTagsSpan);
     }
+
+    tagsCell.appendChild(tagsContainer);
+
     row.appendChild(tagsCell);
 
     // Actions
