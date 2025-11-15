@@ -15,13 +15,13 @@ function setupEventListeners() {
     document.getElementById('settingsBtn').addEventListener('click', () => {
         chrome.runtime.openOptionsPage();
     });
-    
+
     document.getElementById('analyzeBtn').addEventListener('click', analyzeTabsWithAI);
     document.getElementById('groupByTagBtn').addEventListener('click', groupTabsByTags);
-    
+
     document.getElementById('searchInput').addEventListener('input', filterTabs);
     document.getElementById('filterSelect').addEventListener('change', filterTabs);
-    
+
     document.getElementById('selectAll').addEventListener('change', (e) => {
         const checkboxes = document.querySelectorAll('.tab-checkbox');
         checkboxes.forEach(cb => {
@@ -34,7 +34,7 @@ function setupEventListeners() {
         });
         updateBulkActionButtons();
     });
-    
+
     document.getElementById('groupSelectedBtn').addEventListener('click', groupSelectedTabs);
     document.getElementById('moveToNewWindowBtn').addEventListener('click', moveSelectedToNewWindow);
     document.getElementById('closeSelectedBtn').addEventListener('click', closeSelectedTabs);
@@ -45,7 +45,7 @@ async function loadTabs() {
     try {
         const windows = await chrome.windows.getAll({ populate: true });
         allTabs = [];
-        
+
         windows.forEach(window => {
             window.tabs.forEach(tab => {
                 allTabs.push({
@@ -55,17 +55,17 @@ async function loadTabs() {
                 });
             });
         });
-        
+
         // Load saved tags from storage
         const storage = await chrome.storage.local.get(['tabTags']);
         const tabTags = storage.tabTags || {};
-        
+
         allTabs.forEach(tab => {
             if (tabTags[tab.id]) {
                 tab.tags = tabTags[tab.id];
             }
         });
-        
+
         updateStats(windows.length, allTabs.length);
         renderTabs(allTabs);
     } catch (error) {
@@ -84,12 +84,12 @@ function updateStats(windowCount, tabCount) {
 function renderTabs(tabs) {
     const tbody = document.getElementById('tabsBody');
     tbody.innerHTML = '';
-    
+
     if (tabs.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#999;">No tabs found</td></tr>';
         return;
     }
-    
+
     // Group tabs by window
     const tabsByWindow = {};
     tabs.forEach(tab => {
@@ -98,7 +98,7 @@ function renderTabs(tabs) {
         }
         tabsByWindow[tab.windowId].push(tab);
     });
-    
+
     // Render each window's tabs
     Object.entries(tabsByWindow).forEach(([windowId, windowTabs], index) => {
         // Add window separator
@@ -108,7 +108,7 @@ function renderTabs(tabs) {
             separatorRow.innerHTML = `<td colspan="5">Window ${index + 1} (${windowTabs.length} tabs)</td>`;
             tbody.appendChild(separatorRow);
         }
-        
+
         // Add tabs
         windowTabs.forEach(tab => {
             const row = createTabRow(tab);
@@ -120,7 +120,7 @@ function renderTabs(tabs) {
 // Create a table row for a tab
 function createTabRow(tab) {
     const row = document.createElement('tr');
-    
+
     // Checkbox
     const checkboxCell = document.createElement('td');
     const checkbox = document.createElement('input');
@@ -138,14 +138,14 @@ function createTabRow(tab) {
     });
     checkboxCell.appendChild(checkbox);
     row.appendChild(checkboxCell);
-    
+
     // Title
     const titleCell = document.createElement('td');
     titleCell.className = 'tab-title';
     titleCell.textContent = tab.title || 'Untitled';
     titleCell.title = tab.title;
     row.appendChild(titleCell);
-    
+
     // URL
     const urlCell = document.createElement('td');
     urlCell.className = 'tab-url';
@@ -159,7 +159,7 @@ function createTabRow(tab) {
     urlCell.textContent = urlDisplay;
     urlCell.title = tab.url;
     row.appendChild(urlCell);
-    
+
     // Tags
     const tagsCell = document.createElement('td');
     tagsCell.className = 'tab-tags';
@@ -178,34 +178,34 @@ function createTabRow(tab) {
         tagsCell.appendChild(noTagsSpan);
     }
     row.appendChild(tagsCell);
-    
+
     // Actions
     const actionsCell = document.createElement('td');
     actionsCell.className = 'tab-actions';
-    
+
     const switchBtn = document.createElement('button');
     switchBtn.className = 'action-btn';
     switchBtn.textContent = '👁️';
     switchBtn.title = 'Switch to tab';
     switchBtn.addEventListener('click', () => switchToTab(tab));
     actionsCell.appendChild(switchBtn);
-    
+
     const tagBtn = document.createElement('button');
     tagBtn.className = 'action-btn';
     tagBtn.textContent = '🏷️';
     tagBtn.title = 'Edit tags';
     tagBtn.addEventListener('click', () => editTabTags(tab));
     actionsCell.appendChild(tagBtn);
-    
+
     const closeBtn = document.createElement('button');
     closeBtn.className = 'action-btn';
     closeBtn.textContent = '✕';
     closeBtn.title = 'Close tab';
     closeBtn.addEventListener('click', () => closeTab(tab));
     actionsCell.appendChild(closeBtn);
-    
+
     row.appendChild(actionsCell);
-    
+
     return row;
 }
 
@@ -213,25 +213,25 @@ function createTabRow(tab) {
 function filterTabs() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const filter = document.getElementById('filterSelect').value;
-    
+
     let filteredTabs = allTabs;
-    
+
     // Apply search filter
     if (searchTerm) {
-        filteredTabs = filteredTabs.filter(tab => 
+        filteredTabs = filteredTabs.filter(tab =>
             tab.title.toLowerCase().includes(searchTerm) ||
             tab.url.toLowerCase().includes(searchTerm) ||
             (tab.tags && tab.tags.some(tag => tag.name.toLowerCase().includes(searchTerm)))
         );
     }
-    
+
     // Apply group filter
     if (filter === 'ungrouped') {
         filteredTabs = filteredTabs.filter(tab => !tab.tags || tab.tags.length === 0);
     } else if (filter === 'grouped') {
         filteredTabs = filteredTabs.filter(tab => tab.tags && tab.tags.length > 0);
     }
-    
+
     renderTabs(filteredTabs);
 }
 
@@ -239,39 +239,52 @@ function filterTabs() {
 async function analyzeTabsWithAI() {
     const loadingIndicator = document.getElementById('loadingIndicator');
     const analyzeBtn = document.getElementById('analyzeBtn');
-    
+
     try {
         // Get LLM settings
         const settings = await chrome.storage.local.get(['llmProvider', 'apiKey', 'apiEndpoint', 'model']);
-        
-        if (!settings.llmProvider || !settings.apiKey) {
-            alert('Please configure your LLM settings in the options page first.');
+
+        if (!settings.llmProvider) {
+            alert('Please select an LLM provider in the options page first.');
             chrome.runtime.openOptionsPage();
             return;
         }
-        
+        // Validate provider-specific requirements
+        const provider = settings.llmProvider;
+        const requiresKey = provider === 'openai' || provider === 'gemini' || provider === 'claude';
+        if (requiresKey && !settings.apiKey) {
+            alert('Please enter your API key for the selected provider in the options page.');
+            chrome.runtime.openOptionsPage();
+            return;
+        }
+        if (provider === 'custom' && !settings.apiEndpoint) {
+            alert('Please enter your custom API endpoint in the options page.');
+            chrome.runtime.openOptionsPage();
+            return;
+        }
+
         loadingIndicator.classList.remove('hidden');
         analyzeBtn.disabled = true;
-        
+
         // Prepare tab data for analysis
         const tabData = allTabs.map(tab => ({
             id: tab.id,
             title: tab.title,
             url: tab.url
         }));
-        
+
         // Send to background script for AI analysis
         const response = await chrome.runtime.sendMessage({
             action: 'analyzeTabsWithAI',
             tabs: tabData,
             settings: settings
         });
-        
+
         if (response.success) {
             // Apply suggested tags
             const tabTags = await chrome.storage.local.get(['tabTags']);
             const currentTags = tabTags.tabTags || {};
-            
+
             response.suggestions.forEach(suggestion => {
                 const tab = allTabs.find(t => t.id === suggestion.tabId);
                 if (tab) {
@@ -283,7 +296,7 @@ async function analyzeTabsWithAI() {
                     currentTags[tab.id] = tab.tags;
                 }
             });
-            
+
             await chrome.storage.local.set({ tabTags: currentTags });
             renderTabs(allTabs);
             showSuccess('AI analysis complete! Tags suggested for tabs.');
@@ -304,7 +317,7 @@ async function groupTabsByTags() {
     try {
         // Collect all unique tags
         const tagGroups = {};
-        
+
         allTabs.forEach(tab => {
             if (tab.tags && tab.tags.length > 0) {
                 tab.tags.forEach(tag => {
@@ -315,26 +328,26 @@ async function groupTabsByTags() {
                 });
             }
         });
-        
+
         if (Object.keys(tagGroups).length === 0) {
             alert('No tags found. Please analyze tabs or add tags manually first.');
             return;
         }
-        
+
         // Track tabs that have already been moved
         const movedTabIds = new Set();
-        
+
         // Create new windows for each tag group
         for (const [, tabIds] of Object.entries(tagGroups)) {
             // Filter out tabs that have already been moved
             const uniqueTabIds = tabIds.filter(tabId => !movedTabIds.has(tabId));
-            
+
             if (uniqueTabIds.length > 0) {
                 const newWindow = await chrome.windows.create({
                     tabId: uniqueTabIds[0]
                 });
                 movedTabIds.add(uniqueTabIds[0]);
-                
+
                 // Move remaining tabs to the new window
                 for (let i = 1; i < uniqueTabIds.length; i++) {
                     await chrome.tabs.move(uniqueTabIds[i], {
@@ -345,7 +358,7 @@ async function groupTabsByTags() {
                 }
             }
         }
-        
+
         showSuccess(`Created ${Object.keys(tagGroups).length} window groups based on tags`);
         await loadTabs();
     } catch (error) {
@@ -370,21 +383,21 @@ async function switchToTab(tab) {
 async function editTabTags(tab) {
     const currentTags = tab.tags ? tab.tags.map(t => t.name).join(', ') : '';
     const newTags = prompt('Enter tags (comma-separated):', currentTags);
-    
+
     if (newTags !== null) {
         const tags = newTags.split(',')
             .map(t => t.trim())
             .filter(t => t.length > 0)
             .map(name => ({ name, suggested: false }));
-        
+
         tab.tags = tags;
-        
+
         // Save to storage
         const storage = await chrome.storage.local.get(['tabTags']);
         const tabTags = storage.tabTags || {};
         tabTags[tab.id] = tags;
         await chrome.storage.local.set({ tabTags });
-        
+
         renderTabs(allTabs);
     }
 }
@@ -409,20 +422,20 @@ async function closeTab(tab) {
 // Group selected tabs
 async function groupSelectedTabs() {
     if (selectedTabs.size === 0) return;
-    
+
     const groupName = prompt('Enter a group/tag name for selected tabs:');
     if (!groupName) return;
-    
+
     try {
         const storage = await chrome.storage.local.get(['tabTags']);
         const tabTags = storage.tabTags || {};
-        
+
         selectedTabs.forEach(tabId => {
             const tab = allTabs.find(t => t.id === tabId);
             if (tab) {
                 const existingTags = tab.tags || [];
                 const newTag = { name: groupName, suggested: false };
-                
+
                 // Check if tag already exists
                 if (!existingTags.some(t => t.name === groupName)) {
                     tab.tags = [...existingTags, newTag];
@@ -430,7 +443,7 @@ async function groupSelectedTabs() {
                 }
             }
         });
-        
+
         await chrome.storage.local.set({ tabTags });
         renderTabs(allTabs);
         showSuccess(`Tagged ${selectedTabs.size} tabs with "${groupName}"`);
@@ -443,15 +456,15 @@ async function groupSelectedTabs() {
 // Move selected tabs to new window
 async function moveSelectedToNewWindow() {
     if (selectedTabs.size === 0) return;
-    
+
     try {
         const tabIds = Array.from(selectedTabs);
-        
+
         // Create new window with first tab
         const newWindow = await chrome.windows.create({
             tabId: tabIds[0]
         });
-        
+
         // Move remaining tabs
         for (let i = 1; i < tabIds.length; i++) {
             await chrome.tabs.move(tabIds[i], {
@@ -459,7 +472,7 @@ async function moveSelectedToNewWindow() {
                 index: -1
             });
         }
-        
+
         selectedTabs.clear();
         await loadTabs();
         showSuccess(`Moved ${tabIds.length} tabs to a new window`);
@@ -472,11 +485,11 @@ async function moveSelectedToNewWindow() {
 // Close selected tabs
 async function closeSelectedTabs() {
     if (selectedTabs.size === 0) return;
-    
+
     if (!confirm(`Close ${selectedTabs.size} selected tabs?`)) {
         return;
     }
-    
+
     try {
         await chrome.tabs.remove(Array.from(selectedTabs));
         selectedTabs.clear();

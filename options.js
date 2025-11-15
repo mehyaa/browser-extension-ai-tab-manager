@@ -20,11 +20,11 @@ async function loadSettings() {
             'apiEndpoint',
             'model'
         ]);
-        
+
         if (settings.llmProvider) {
             document.getElementById('llmProvider').value = settings.llmProvider;
             showProviderSettings(settings.llmProvider);
-            
+
             // Load provider-specific settings
             switch (settings.llmProvider) {
                 case 'openai':
@@ -35,7 +35,7 @@ async function loadSettings() {
                         document.getElementById('openaiModel').value = settings.model;
                     }
                     break;
-                    
+
                 case 'ollama':
                     if (settings.apiEndpoint) {
                         document.getElementById('ollamaEndpoint').value = settings.apiEndpoint;
@@ -44,7 +44,25 @@ async function loadSettings() {
                         document.getElementById('ollamaModel').value = settings.model;
                     }
                     break;
-                    
+
+                case 'gemini':
+                    if (settings.apiKey) {
+                        document.getElementById('geminiApiKey').value = settings.apiKey;
+                    }
+                    if (settings.model) {
+                        document.getElementById('geminiModel').value = settings.model;
+                    }
+                    break;
+
+                case 'claude':
+                    if (settings.apiKey) {
+                        document.getElementById('claudeApiKey').value = settings.apiKey;
+                    }
+                    if (settings.model) {
+                        document.getElementById('claudeModel').value = settings.model;
+                    }
+                    break;
+
                 case 'custom':
                     if (settings.apiEndpoint) {
                         document.getElementById('customEndpoint').value = settings.apiEndpoint;
@@ -75,12 +93,16 @@ function showProviderSettings(provider) {
     document.querySelectorAll('.provider-settings').forEach(el => {
         el.classList.add('hidden');
     });
-    
+
     // Show selected provider settings
     if (provider === 'openai') {
         document.getElementById('openaiSettings').classList.remove('hidden');
     } else if (provider === 'ollama') {
         document.getElementById('ollamaSettings').classList.remove('hidden');
+    } else if (provider === 'gemini') {
+        document.getElementById('geminiSettings').classList.remove('hidden');
+    } else if (provider === 'claude') {
+        document.getElementById('claudeSettings').classList.remove('hidden');
     } else if (provider === 'custom') {
         document.getElementById('customSettings').classList.remove('hidden');
     }
@@ -90,16 +112,16 @@ function showProviderSettings(provider) {
 async function saveSettings() {
     try {
         const provider = document.getElementById('llmProvider').value;
-        
+
         if (!provider) {
             showStatus('Please select an LLM provider', 'error');
             return;
         }
-        
+
         let settings = {
             llmProvider: provider
         };
-        
+
         // Get provider-specific settings
         switch (provider) {
             case 'openai':
@@ -111,7 +133,7 @@ async function saveSettings() {
                 settings.apiKey = openaiApiKey;
                 settings.model = document.getElementById('openaiModel').value;
                 break;
-                
+
             case 'ollama':
                 const ollamaEndpoint = document.getElementById('ollamaEndpoint').value.trim() || 'http://localhost:11434';
                 const ollamaModel = document.getElementById('ollamaModel').value.trim();
@@ -122,7 +144,27 @@ async function saveSettings() {
                 settings.apiEndpoint = ollamaEndpoint;
                 settings.model = ollamaModel;
                 break;
-                
+
+            case 'gemini':
+                const geminiApiKey = document.getElementById('geminiApiKey').value.trim();
+                if (!geminiApiKey) {
+                    showStatus('Please enter your Gemini API key', 'error');
+                    return;
+                }
+                settings.apiKey = geminiApiKey;
+                settings.model = document.getElementById('geminiModel').value;
+                break;
+
+            case 'claude':
+                const claudeApiKey = document.getElementById('claudeApiKey').value.trim();
+                if (!claudeApiKey) {
+                    showStatus('Please enter your Claude API key', 'error');
+                    return;
+                }
+                settings.apiKey = claudeApiKey;
+                settings.model = document.getElementById('claudeModel').value;
+                break;
+
             case 'custom':
                 const customEndpoint = document.getElementById('customEndpoint').value.trim();
                 if (!customEndpoint) {
@@ -134,7 +176,7 @@ async function saveSettings() {
                 settings.model = document.getElementById('customModel').value.trim();
                 break;
         }
-        
+
         await chrome.storage.local.set(settings);
         showStatus('Settings saved successfully!', 'success');
     } catch (error) {
@@ -147,21 +189,21 @@ async function saveSettings() {
 async function testConnection() {
     try {
         const provider = document.getElementById('llmProvider').value;
-        
+
         if (!provider) {
             showStatus('Please select and save a provider first', 'error');
             return;
         }
-        
+
         showStatus('Testing connection...', '');
-        
+
         const settings = await chrome.storage.local.get([
             'llmProvider',
             'apiKey',
             'apiEndpoint',
             'model'
         ]);
-        
+
         // Create a simple test prompt
         const testTabs = [
             {
@@ -175,14 +217,14 @@ async function testConnection() {
                 url: 'https://stackoverflow.com'
             }
         ];
-        
+
         // Send test request to background script
         const response = await chrome.runtime.sendMessage({
             action: 'analyzeTabsWithAI',
             tabs: testTabs,
             settings: settings
         });
-        
+
         if (response.success) {
             showStatus('Connection test successful! ✓', 'success');
         } else {
@@ -199,7 +241,7 @@ function showStatus(message, type) {
     const statusEl = document.getElementById('statusMessage');
     statusEl.textContent = message;
     statusEl.className = 'status-message ' + type;
-    
+
     // Clear message after 5 seconds for success messages
     if (type === 'success') {
         setTimeout(() => {

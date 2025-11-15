@@ -13,6 +13,8 @@ A powerful browser extension for Chrome and Firefox that uses AI to help you org
 - **Smart Suggestions**: Use AI to automatically suggest relevant groups and tags for your tabs
 - **Multiple LLM Support**:
   - OpenAI (GPT-3.5, GPT-4)
+  - Google Gemini (1.5 Pro, 1.5 Flash)
+  - Anthropic Claude (3.5 Sonnet/Haiku, 3 Opus)
   - Ollama (local AI models)
   - Custom API endpoints
 - **Content Analysis**: AI analyzes actual page content, titles, and descriptions to suggest meaningful categorization (not just URLs)
@@ -73,6 +75,28 @@ After installing the extension:
 7. Click "Save Settings"
 
 #### Custom API Setup
+#### Google Gemini Setup
+1. Select "Google Gemini" as the provider
+2. Get an API key from Google AI Studio: https://aistudio.google.com/app/apikey
+3. Enter your API key
+4. Choose a model (e.g., `gemini-1.5-pro-latest` or `gemini-1.5-flash-latest`)
+5. Click "Save Settings"
+
+Notes:
+- Endpoint is managed by the extension; only the API key and model are required.
+- Ensure your Google account has access to the selected model family.
+
+#### Anthropic Claude Setup
+1. Select "Anthropic Claude" as the provider
+2. Get an API key from Anthropic Console: https://console.anthropic.com/
+3. Enter your API key
+4. Choose a model (e.g., `claude-3-5-sonnet-20241022`)
+5. Click "Save Settings"
+
+Notes:
+- Endpoint is managed by the extension; only the API key and model are required.
+- Some models may have access restrictions depending on your account.
+
 1. Select "Custom API Endpoint"
 2. Enter your API endpoint URL
 3. Enter API key if required
