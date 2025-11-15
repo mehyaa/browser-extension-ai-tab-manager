@@ -15,7 +15,7 @@ A powerful browser extension for Chrome and Firefox that uses AI to help you org
   - OpenAI (GPT-3.5, GPT-4)
   - Ollama (local AI models)
   - Custom API endpoints
-- **Content Analysis**: AI analyzes tab titles and URLs to suggest meaningful categorization
+- **Content Analysis**: AI analyzes actual page content, titles, and descriptions to suggest meaningful categorization (not just URLs)
 
 ### 🏷️ Tab Management
 - **Grouping & Tagging**: Organize tabs with custom tags and groups
@@ -126,7 +126,7 @@ Click the "Test Connection" button to verify your LLM provider is configured cor
 
 - **Local Storage**: Tab tags and settings are stored locally in your browser
 - **API Keys**: Your API keys are stored locally and never shared
-- **Data Transmission**: Only tab titles and URLs are sent to your configured LLM provider
+- **Data Transmission**: Tab titles, descriptions, and visible page content are sent to your configured LLM provider for analysis. Special browser pages (chrome://, about:) are excluded.
 - **No Tracking**: This extension does not track your browsing history or collect analytics
 
 ## Troubleshooting
@@ -160,6 +160,7 @@ Click the "Test Connection" button to verify your LLM provider is configured cor
 ├── popup.css            # Popup styles
 ├── popup.js             # Popup logic and UI handling
 ├── background.js        # Background service worker & LLM integration
+├── content.js           # Content script for page content extraction
 ├── options.html         # Settings page
 ├── options.css          # Settings page styles
 ├── options.js           # Settings page logic

@@ -149,8 +149,14 @@ function createTabRow(tab) {
     // URL
     const urlCell = document.createElement('td');
     urlCell.className = 'tab-url';
-    const url = new URL(tab.url);
-    urlCell.textContent = url.hostname + url.pathname;
+    let urlDisplay;
+    try {
+        const url = new URL(tab.url);
+        urlDisplay = url.hostname + url.pathname;
+    } catch (e) {
+        urlDisplay = tab.url || 'Invalid URL';
+    }
+    urlCell.textContent = urlDisplay;
     urlCell.title = tab.url;
     row.appendChild(urlCell);
     
@@ -166,7 +172,10 @@ function createTabRow(tab) {
             tagsCell.appendChild(tagSpan);
         });
     } else {
-        tagsCell.innerHTML = '<span style="color:#999;font-size:12px;">No tags</span>';
+        const noTagsSpan = document.createElement('span');
+        noTagsSpan.className = 'no-tags';
+        noTagsSpan.textContent = 'No tags';
+        tagsCell.appendChild(noTagsSpan);
     }
     row.appendChild(tagsCell);
     
@@ -312,19 +321,27 @@ async function groupTabsByTags() {
             return;
         }
         
+        // Track tabs that have already been moved
+        const movedTabIds = new Set();
+        
         // Create new windows for each tag group
-        for (const [tagName, tabIds] of Object.entries(tagGroups)) {
-            if (tabIds.length > 0) {
+        for (const [, tabIds] of Object.entries(tagGroups)) {
+            // Filter out tabs that have already been moved
+            const uniqueTabIds = tabIds.filter(tabId => !movedTabIds.has(tabId));
+            
+            if (uniqueTabIds.length > 0) {
                 const newWindow = await chrome.windows.create({
-                    tabId: tabIds[0]
+                    tabId: uniqueTabIds[0]
                 });
+                movedTabIds.add(uniqueTabIds[0]);
                 
                 // Move remaining tabs to the new window
-                for (let i = 1; i < tabIds.length; i++) {
-                    await chrome.tabs.move(tabIds[i], {
+                for (let i = 1; i < uniqueTabIds.length; i++) {
+                    await chrome.tabs.move(uniqueTabIds[i], {
                         windowId: newWindow.id,
                         index: -1
                     });
+                    movedTabIds.add(uniqueTabIds[i]);
                 }
             }
         }
@@ -480,8 +497,7 @@ function updateBulkActionButtons() {
 
 // Show success message
 function showSuccess(message) {
-    // Simple alert for now - could be enhanced with a toast notification
-    console.log('Success:', message);
+    alert('Success: ' + message);
 }
 
 // Show error message

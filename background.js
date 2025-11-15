@@ -15,8 +15,11 @@ async function analyzeTabsWithAI(tabs, settings) {
     try {
         const { llmProvider, apiKey, apiEndpoint, model } = settings;
         
+        // Extract content from tabs
+        const tabsWithContent = await extractTabsContent(tabs);
+        
         // Prepare prompt for AI
-        const prompt = createAnalysisPrompt(tabs);
+        const prompt = createAnalysisPrompt(tabsWithContent);
         
         let result;
         
@@ -50,18 +53,81 @@ async function analyzeTabsWithAI(tabs, settings) {
     }
 }
 
-// Create prompt for AI analysis
-function createAnalysisPrompt(tabs) {
-    const tabList = tabs.map((tab, index) => 
-        `${index + 1}. Title: "${tab.title}" | URL: ${tab.url}`
-    ).join('\n');
+// Extract content from tabs
+async function extractTabsContent(tabs) {
+    const tabsWithContent = [];
     
-    return `You are a browser tab organization assistant. Analyze the following browser tabs and suggest appropriate groups/tags for each tab. Consider the content type, domain, and purpose.
+    for (const tab of tabs) {
+        let content = '';
+        let metadata = {
+            title: tab.title,
+            url: tab.url
+        };
+        
+        // Try to extract content from the tab
+        try {
+            // Skip special URLs that don't support content scripts
+            if (tab.url.startsWith('chrome://') || 
+                tab.url.startsWith('about:') || 
+                tab.url.startsWith('edge://') ||
+                tab.url.startsWith('chrome-extension://')) {
+                content = `Special page: ${tab.title}`;
+            } else {
+                // Send message to content script to extract content
+                const response = await chrome.tabs.sendMessage(tab.id, { action: 'extractContent' });
+                
+                if (response && response.success) {
+                    metadata = response.metadata;
+                    content = response.content;
+                } else {
+                    // Fallback if content extraction fails
+                    content = `Title: ${tab.title}`;
+                }
+            }
+        } catch (error) {
+            // If content script fails, use title as fallback
+            console.log(`Failed to extract content from tab ${tab.id}:`, error.message);
+            content = `Title: ${tab.title}`;
+        }
+        
+        tabsWithContent.push({
+            id: tab.id,
+            title: metadata.title,
+            content: content,
+            description: metadata.description || '',
+            url: tab.url
+        });
+    }
+    
+    return tabsWithContent;
+}
+
+// Create prompt for AI analysis
+function createAnalysisPrompt(tabsWithContent) {
+    const tabList = tabsWithContent.map((tab, index) => {
+        let tabInfo = `${index + 1}. Title: "${tab.title}"`;
+        
+        if (tab.description) {
+            tabInfo += `\n   Description: ${tab.description}`;
+        }
+        
+        if (tab.content && tab.content.length > 0) {
+            // Truncate content if too long
+            const contentPreview = tab.content.length > 500 
+                ? tab.content.substring(0, 500) + '...' 
+                : tab.content;
+            tabInfo += `\n   Content: ${contentPreview}`;
+        }
+        
+        return tabInfo;
+    }).join('\n\n');
+    
+    return `You are a browser tab organization assistant. Analyze the following browser tabs based on their titles and content, and suggest appropriate groups/tags for each tab. Consider the content type, topic, and purpose.
 
 Tabs to analyze:
 ${tabList}
 
-For each tab, suggest 1-3 relevant tags/groups that would help organize them. Tags should be concise (1-2 words) and descriptive.
+For each tab, suggest 1-3 relevant tags/groups that would help organize them. Tags should be concise (1-2 words) and descriptive. Base your suggestions on the actual content, not just the URL.
 
 Respond in JSON format:
 {
@@ -106,11 +172,42 @@ async function analyzeWithOpenAI(prompt, apiKey, model) {
     });
     
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'OpenAI API request failed');
+        let errorMessage = 'OpenAI API request failed';
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            try {
+                const error = await response.json();
+                errorMessage = error.error?.message || errorMessage;
+            } catch (jsonErr) {
+                errorMessage += ` (failed to parse error response: ${jsonErr.message})`;
+            }
+        } else {
+            try {
+                const text = await response.text();
+                errorMessage += ` (status ${response.status}): ${text.substring(0, 200)}`;
+            } catch (textErr) {
+                errorMessage += ` (status ${response.status})`;
+            }
+        }
+        throw new Error(errorMessage);
     }
     
-    const data = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+    let data;
+    if (contentType.includes('application/json')) {
+        try {
+            data = await response.json();
+        } catch (jsonErr) {
+            throw new Error('Failed to parse OpenAI response as JSON: ' + jsonErr.message);
+        }
+    } else {
+        throw new Error('OpenAI API did not return JSON');
+    }
+    
+    if (!Array.isArray(data.choices) || data.choices.length === 0 || !data.choices[0].message || typeof data.choices[0].message.content !== 'string') {
+        throw new Error('OpenAI API response missing choices or message content');
+    }
+    
     return data.choices[0].message.content;
 }
 
@@ -129,7 +226,13 @@ async function analyzeWithOllama(prompt, endpoint, model) {
     });
     
     if (!response.ok) {
-        throw new Error('Ollama API request failed');
+        let errorText;
+        try {
+            errorText = await response.text();
+        } catch (e) {
+            errorText = '[Unable to read response body]';
+        }
+        throw new Error(`Ollama API request failed (status ${response.status}): ${errorText}`);
     }
     
     const data = await response.json();
@@ -161,7 +264,8 @@ async function analyzeWithCustomAPI(prompt, endpoint, apiKey, model) {
     });
     
     if (!response.ok) {
-        throw new Error('Custom API request failed');
+        const errorText = await response.text();
+        throw new Error(`Custom API request failed (status ${response.status}): ${errorText}`);
     }
     
     const data = await response.json();
@@ -174,7 +278,7 @@ async function analyzeWithCustomAPI(prompt, endpoint, apiKey, model) {
 function parseAISuggestions(aiResponse, tabs) {
     try {
         // Try to extract JSON from the response
-        let jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+        let jsonMatch = aiResponse.match(/\{[\s\S]*?\}/);
         if (!jsonMatch) {
             // Try to parse the whole response as JSON
             jsonMatch = [aiResponse];
