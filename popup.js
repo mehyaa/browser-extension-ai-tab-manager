@@ -242,7 +242,7 @@ async function analyzeTabsWithAI() {
 
     try {
         // Get LLM settings
-        const settings = await chrome.storage.local.get(['llmProvider', 'apiKey', 'apiEndpoint', 'model']);
+        const settings = await chrome.storage.local.get(['llmProvider', 'llmOptions']);
 
         if (!settings.llmProvider) {
             alert('Please select an LLM provider in the options page first.');
@@ -252,12 +252,12 @@ async function analyzeTabsWithAI() {
         // Validate provider-specific requirements
         const provider = settings.llmProvider;
         const requiresKey = provider === 'openai' || provider === 'gemini' || provider === 'claude';
-        if (requiresKey && !settings.apiKey) {
+        if (requiresKey && !settings.llmOptions.apiKey) {
             alert('Please enter your API key for the selected provider in the options page.');
             chrome.runtime.openOptionsPage();
             return;
         }
-        if (provider === 'custom' && !settings.apiEndpoint) {
+        if (provider === 'custom' && !settings.llmOptions.apiEndpoint) {
             alert('Please enter your custom API endpoint in the options page.');
             chrome.runtime.openOptionsPage();
             return;
