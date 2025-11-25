@@ -83,7 +83,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 header h1 {
@@ -128,7 +128,7 @@ header h1 {
 
 .btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .btn:disabled {
@@ -175,7 +175,8 @@ header h1 {
     background: var(--small-btn-bg-hover);
 }
 
-.search-input, .filter-select {
+.search-input,
+.filter-select {
     padding: 8px 12px;
     border: 1px solid var(--input-border);
     border-radius: 6px;
@@ -183,7 +184,8 @@ header h1 {
     flex: 1;
 }
 
-.search-input:focus, .filter-select:focus {
+.search-input:focus,
+.filter-select:focus {
     outline: none;
     border-color: var(--btn-primary);
     box-shadow: 0 0 0 3px var(--input-focus-shadow);
@@ -224,8 +226,13 @@ header h1 {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .tabs-container {
@@ -298,6 +305,12 @@ header h1 {
     border-radius: 4px;
     font-size: 11px;
     font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.tag:hover {
+    opacity: 0.8;
 }
 
 .tag.suggested {

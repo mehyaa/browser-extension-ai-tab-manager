@@ -171,7 +171,11 @@ function createTabRow(tab) {
             const tagSpan = document.createElement('span');
             tagSpan.className = tag.suggested ? 'tag suggested' : 'tag';
             tagSpan.textContent = tag.name;
-            tagSpan.title = tag.suggested ? 'AI suggested' : '';
+            tagSpan.title = 'Click to move all tabs with this tag to new window';
+            tagSpan.addEventListener('click', (e) => {
+                e.stopPropagation();
+                moveTabsByTag(tag.name);
+            });
             tagsContainer.appendChild(tagSpan);
         });
     } else {
@@ -511,6 +515,41 @@ function updateBulkActionButtons() {
     document.getElementById('groupSelectedBtn').disabled = !hasSelection;
     document.getElementById('moveToNewWindowBtn').disabled = !hasSelection;
     document.getElementById('closeSelectedBtn').disabled = !hasSelection;
+}
+
+// Move tabs with specific tag to new window
+async function moveTabsByTag(tagName) {
+    try {
+        // Find all tabs with this tag
+        const tabsToMove = allTabs.filter(tab =>
+            tab.tags && tab.tags.some(t => t.name === tagName)
+        );
+
+        if (tabsToMove.length === 0) return;
+
+        if (!confirm(`Move ${tabsToMove.length} tabs with tag "${tagName}" to a new window?`)) {
+            return;
+        }
+
+        // Create new window with first tab
+        const newWindow = await chrome.windows.create({
+            tabId: tabsToMove[0].id
+        });
+
+        // Move remaining tabs
+        for (let i = 1; i < tabsToMove.length; i++) {
+            await chrome.tabs.move(tabsToMove[i].id, {
+                windowId: newWindow.id,
+                index: -1
+            });
+        }
+
+        await loadTabs();
+        showSuccess(`Moved ${tabsToMove.length} tabs tagged "${tagName}" to new window`);
+    } catch (error) {
+        console.error('Error moving tabs by tag:', error);
+        showError('Failed to move tabs by tag');
+    }
 }
 
 // Show success message
