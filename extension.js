@@ -17,7 +17,7 @@ function setupEventListeners() {
     });
 
     document.getElementById('analyzeBtn').addEventListener('click', analyzeTabsWithAI);
-    document.getElementById('groupByTagBtn').addEventListener('click', groupTabsByTags);
+    document.getElementById('moveTabsToNewWindowsByTagsBtn').addEventListener('click', moveTabsToNewWindowsByTags);
 
     document.getElementById('searchInput').addEventListener('input', filterTabs);
     document.getElementById('filterSelect').addEventListener('change', filterTabs);
@@ -35,7 +35,7 @@ function setupEventListeners() {
         updateBulkActionButtons();
     });
 
-    document.getElementById('groupSelectedBtn').addEventListener('click', groupSelectedTabs);
+    document.getElementById('tagSelectedBtn').addEventListener('click', tagSelectedTabs);
     document.getElementById('moveToNewWindowBtn').addEventListener('click', moveSelectedToNewWindow);
     document.getElementById('closeSelectedBtn').addEventListener('click', closeSelectedTabs);
 }
@@ -83,19 +83,23 @@ function updateStats(windowCount, tabCount) {
 // Render tabs in table
 function renderTabs(tabs) {
     const tbody = document.getElementById('tabsBody');
+
     tbody.innerHTML = '';
 
     if (tabs.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#999;">No tabs found</td></tr>';
+
         return;
     }
 
     // Group tabs by window
     const tabsByWindow = {};
+
     tabs.forEach(tab => {
         if (!tabsByWindow[tab.windowId]) {
             tabsByWindow[tab.windowId] = [];
         }
+
         tabsByWindow[tab.windowId].push(tab);
     });
 
@@ -195,7 +199,7 @@ function createTabRow(tab) {
 
     const switchBtn = document.createElement('button');
     switchBtn.className = 'action-btn';
-    switchBtn.textContent = '👁️';
+    switchBtn.textContent = '🌍';
     switchBtn.title = 'Switch to tab';
     switchBtn.addEventListener('click', () => switchToTab(tab));
     actionsCell.appendChild(switchBtn);
@@ -209,7 +213,7 @@ function createTabRow(tab) {
 
     const closeBtn = document.createElement('button');
     closeBtn.className = 'action-btn';
-    closeBtn.textContent = '✕';
+    closeBtn.textContent = '❌';
     closeBtn.title = 'Close tab';
     closeBtn.addEventListener('click', () => closeTab(tab));
     actionsCell.appendChild(closeBtn);
@@ -235,10 +239,10 @@ function filterTabs() {
         );
     }
 
-    // Apply group filter
-    if (filter === 'ungrouped') {
+    // Apply tag filter
+    if (filter === 'untagged') {
         filteredTabs = filteredTabs.filter(tab => !tab.tags || tab.tags.length === 0);
-    } else if (filter === 'grouped') {
+    } else if (filter === 'tagged') {
         filteredTabs = filteredTabs.filter(tab => tab.tags && tab.tags.length > 0);
     }
 
@@ -322,8 +326,8 @@ async function analyzeTabsWithAI() {
     }
 }
 
-// Group tabs by their tags
-async function groupTabsByTags() {
+// Move tabs to new windows by their tags
+async function moveTabsToNewWindowsByTags() {
     try {
         // Collect all unique tags
         const tagGroups = {};
@@ -334,6 +338,7 @@ async function groupTabsByTags() {
                     if (!tagGroups[tag.name]) {
                         tagGroups[tag.name] = [];
                     }
+
                     tagGroups[tag.name].push(tab.id);
                 });
             }
@@ -369,11 +374,11 @@ async function groupTabsByTags() {
             }
         }
 
-        showSuccess(`Created ${Object.keys(tagGroups).length} window groups based on tags`);
+        showSuccess(`Created ${Object.keys(tagGroups).length} windows based on tags`);
         await loadTabs();
     } catch (error) {
-        console.error('Error grouping tabs:', error);
-        showError('Failed to group tabs: ' + error.message);
+        console.error('Error moving tabs:', error);
+        showError('Failed to move tabs: ' + error.message);
     }
 }
 
@@ -428,12 +433,13 @@ async function closeTab(tab) {
     }
 }
 
-// Group selected tabs
-async function groupSelectedTabs() {
+// Tag selected tabs
+async function tagSelectedTabs() {
     if (selectedTabs.size === 0) return;
 
-    const groupName = prompt('Enter a group/tag name for selected tabs:');
-    if (!groupName) return;
+    const tagName = prompt('Enter a tag name for selected tabs:');
+
+    if (!tagName) return;
 
     try {
         const storage = await chrome.storage.local.get(['tabTags']);
@@ -441,24 +447,29 @@ async function groupSelectedTabs() {
 
         selectedTabs.forEach(tabId => {
             const tab = allTabs.find(t => t.id === tabId);
+
             if (tab) {
                 const existingTags = tab.tags || [];
-                const newTag = { name: groupName, suggested: false };
+                const newTag = { name: tagName, suggested: false };
 
                 // Check if tag already exists
-                if (!existingTags.some(t => t.name === groupName)) {
+                if (!existingTags.some(t => t.name === tagName)) {
                     tab.tags = [...existingTags, newTag];
+
                     tabTags[tabId] = tab.tags;
                 }
             }
         });
 
         await chrome.storage.local.set({ tabTags });
+
         renderTabs(allTabs);
-        showSuccess(`Tagged ${selectedTabs.size} tabs with "${groupName}"`);
+
+        showSuccess(`Tagged ${selectedTabs.size} tabs with "${tagName}"`);
     } catch (error) {
-        console.error('Error grouping tabs:', error);
-        showError('Failed to group tabs');
+        console.error('Error tagging tabs:', error);
+
+        showError('Failed to tag tabs');
     }
 }
 
@@ -512,7 +523,7 @@ async function closeSelectedTabs() {
 // Update bulk action buttons state
 function updateBulkActionButtons() {
     const hasSelection = selectedTabs.size > 0;
-    document.getElementById('groupSelectedBtn').disabled = !hasSelection;
+    document.getElementById('tagSelectedBtn').disabled = !hasSelection;
     document.getElementById('moveToNewWindowBtn').disabled = !hasSelection;
     document.getElementById('closeSelectedBtn').disabled = !hasSelection;
 }

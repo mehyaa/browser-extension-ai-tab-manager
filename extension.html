@@ -21,15 +21,15 @@
 
         <div class="controls">
             <div class="control-group">
-                <button id="analyzeBtn" class="btn btn-primary">🤖 Analyze & Suggest Groups</button>
-                <button id="groupByTagBtn" class="btn btn-secondary">📁 Group by Tags</button>
+                <button id="analyzeBtn" class="btn btn-primary">🔎 Analyze & Suggest Tags</button>
+                <button id="moveTabsToNewWindowsByTagsBtn" class="btn btn-secondary" title="Move Tabs to New Windows by Tags">📁 Move Tabs</button>
             </div>
             <div class="filter-group">
                 <input type="text" id="searchInput" placeholder="Search tabs..." class="search-input">
                 <select id="filterSelect" class="filter-select">
                     <option value="all">All Tabs</option>
-                    <option value="ungrouped">Ungrouped</option>
-                    <option value="grouped">Grouped</option>
+                    <option value="untagged">Untagged</option>
+                    <option value="tagged">Tagged</option>
                 </select>
             </div>
         </div>
@@ -54,7 +54,7 @@
                         <th><input type="checkbox" id="selectAll"></th>
                         <th>Title</th>
                         <th>URL</th>
-                        <th>Group/Tags</th>
+                        <th>Tags</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -65,7 +65,7 @@
         </div>
 
         <div class="bulk-actions">
-            <button id="groupSelectedBtn" class="btn btn-secondary" disabled>Group Selected</button>
+            <button id="tagSelectedBtn" class="btn btn-secondary" disabled>Tag Selected</button>
             <button id="moveToNewWindowBtn" class="btn btn-secondary" disabled>Move to New Window</button>
             <button id="closeSelectedBtn" class="btn btn-danger" disabled>Close Selected</button>
         </div>
