@@ -147,7 +147,9 @@ ${tabList}
 
 For each tab, suggest 1-3 relevant tags that would help organize them. Tags should be concise (1-2 words) and descriptive. Base your suggestions on the actual content, not just the URL.
 
-Respond in JSON format:
+IMPORTANT: Respond ONLY with a valid JSON object. Do not include any explanation, markdown formatting, or reasoning outside the JSON.
+
+Response format:
 {
   "suggestions": [
     {
@@ -159,9 +161,7 @@ Respond in JSON format:
       "tags": ["social", "news"]
     }
   ]
-}
-
-Only respond with the JSON, no additional text.`;
+}`;
 }
 
 // Analyze with OpenAI API
@@ -390,14 +390,21 @@ async function analyzeWithCustomAPI(systemPrompt, userPrompt, endpoint, apiKey, 
 // Parse AI suggestions from response
 function parseAISuggestions(aiResponse, tabs) {
     try {
-        // Try to extract JSON from the response
-        let jsonMatch = aiResponse.match(/\{[\s\S]*?\}/);
-        if (!jsonMatch) {
-            // Try to parse the whole response as JSON
-            jsonMatch = [aiResponse];
+        // Remove <think>...</think> blocks from DeepSeek-R1 or similar models
+        let cleanResponse = aiResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+        // Try to find the JSON object
+        // Look for the first '{' and the last '}'
+        const firstBrace = cleanResponse.indexOf('{');
+        const lastBrace = cleanResponse.lastIndexOf('}');
+
+        let jsonString = cleanResponse;
+
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            jsonString = cleanResponse.substring(firstBrace, lastBrace + 1);
         }
 
-        const parsed = JSON.parse(jsonMatch[0]);
+        const parsed = JSON.parse(jsonString);
         const suggestions = [];
 
         if (parsed.suggestions && Array.isArray(parsed.suggestions)) {
